@@ -11,6 +11,10 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
+
+# Python packaging artifacts
+*.egg-info/
+
 # Node.js / Next.js
 node_modules/
 .next/
