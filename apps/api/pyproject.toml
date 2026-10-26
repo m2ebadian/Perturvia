@@ -1,0 +1,9 @@
+[project]
+name = "perturvia-api"
+version = "0.1.0"
+description = "Backend API for the Perturvia AI agent reliability platform"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+]
