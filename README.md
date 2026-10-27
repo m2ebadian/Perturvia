@@ -29,18 +29,24 @@ Perturvia also aims to expose its own MCP server, allowing compatible AI assista
 
 ## Technology
 
-Perturvia is being developed as a full-stack application with a modular architecture.
+Perturvia is being developed as a modular, full-stack platform with an emphasis on extensibility, reproducible experimentation, and production-oriented engineering. The following represents the planned technology stack as development progresses.
 
-| Area | Technologies |
+| Layer | Technologies |
 |---|---|
-| Frontend | Next.js, React, TypeScript, Tailwind CSS |
-| Backend | Python, FastAPI |
-| Database | PostgreSQL |
-| AI & Agent Infrastructure | MCP, LangGraph, Qwen, OpenTelemetry |
-| Machine Learning & MLOps | scikit-learn, XGBoost, MLflow |
-| Development & Deployment | Docker, GitHub Actions, AWS |
+| **Frontend** | TypeScript, React, Next.js, Tailwind CSS, shadcn/ui, React Flow, TanStack Query, Zustand, Recharts |
+| **Backend** | Python, FastAPI, Pydantic, SQLAlchemy, Alembic |
+| **Data & Processing** | PostgreSQL, Supabase (managed hosting), Redis, Python background workers |
+| **Agentic AI & MCP** | LangGraph, LangChain, Official MCP SDK, OpenTelemetry |
+| **LLMs & Inference** | Qwen (initial model), Ollama, OpenAI API, vLLM |
+| **Machine Learning & MLOps** | NumPy, Pandas, SciPy, scikit-learn, XGBoost, MLflow |
+| **Testing** | pytest, HTTPX, Ruff, Vitest, React Testing Library, Playwright |
+| **DevOps & Deployment** | Git, GitHub Actions, Docker, Docker Compose, AWS, Vercel |
 
-Additional technologies will be introduced as the platform evolves. The architecture is intended to remain model-agnostic, with support for both open-weight and commercial LLMs.
+*Planned stack. Technologies will be introduced incrementally as development progresses.*
+
+*Potential future extensions: Apache Kafka, Apache Spark, Kubernetes, and graph-based machine learning.*
+
+The initial architecture follows a modular monolith approach, with separate background processing where needed. Perturvia is designed to remain model-agnostic and framework-independent, allowing support for additional LLM providers, agent frameworks, and MCP integrations over time.
 
 ## Project Status
 
