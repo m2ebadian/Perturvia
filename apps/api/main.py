@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
 from app.database.dependencies import get_db
 
 app = FastAPI(title="Perturvia API")
