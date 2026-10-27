@@ -7,9 +7,30 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - ./apps/api/.env
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - ./apps/api:/app
       - api_venv:/app/.venv
+
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    env_file:
+      - ./apps/api/.env
+    environment:
+      POSTGRES_DB: perturvia
+      POSTGRES_USER: perturvia
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perturvia -d perturvia"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data_pg18:/var/lib/postgresql
 
   web:
     build:
@@ -28,3 +49,4 @@ volumes:
   web_node_modules:
   web_next:
   api_venv:
+  db_data_pg18:
