@@ -1,5 +1,16 @@
 
 services:
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+      - api_venv:/app/.venv
+
   web:
     build:
       context: ./apps/web
@@ -16,3 +27,4 @@ services:
 volumes:
   web_node_modules:
   web_next:
+  api_venv:
