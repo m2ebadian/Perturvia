@@ -1,46 +1,65 @@
 # Perturvia
 
-**An MCP-Native AI Agent Reliability Engineering Platform**
+**An Open-Source AI Agent Reliability Engineering Platform**
 
 *Observe. Break. Predict. Improve.*
 
-Perturvia is a full-stack platform designed to help developers monitor, test, and improve the reliability of AI agent systems. It combines execution tracing, Model Context Protocol (MCP) integration, controlled fault injection, reliability analysis, and machine learning into a unified developer experience.
+Perturvia is an open-source platform for testing, monitoring, and improving the reliability of AI agents. Built around the Model Context Protocol (MCP), it aims to help developers understand how agents behave, identify weaknesses, reproduce failures, and evaluate how well their systems recover from unexpected conditions.
 
-> **Status:** Early Development | **Initial Goal:** 90-Day MVP
+The long-term goal is to build a flexible reliability and security layer for agentic AI systems, combining execution observability, controlled fault injection, automated testing, and machine learning.
 
-## Core Features (Planned)
+Rather than focusing on a single agent framework or industry, Perturvia is being designed as extensible infrastructure that can support different models, tools, and applications.
 
-- **Mission Control:** Monitor agent executions, latency, failures, and performance metrics.
-- **Workflow Studio:** Visualize agent relationships, tool dependencies, and execution paths.
-- **Execution Inspector:** Examine detailed traces, MCP interactions, retries, and errors.
-- **MCP Reliability Gateway:** Instrument MCP interactions and introduce controlled test failures.
-- **MCP Reliability Twin:** Reproduce MCP interaction conditions in isolated testing environments.
-- **Chaos Laboratory:** Run repeatable fault-injection experiments to evaluate agent resilience.
-- **Reliability Intelligence:** Generate reliability profiles and compare workflow versions to measure improvements.
-- **Predictive Intelligence:** Apply machine learning to failure prediction and anomaly detection.
+## What We're Building
 
-Perturvia will also expose its own MCP server, allowing compatible AI coding assistants to access reliability insights and initiate authorized experiments.
+Perturvia's planned capabilities include:
 
-## Tech Stack
+- **Mission Control** — Monitor agent executions, performance, failures, and reliability trends through a centralized dashboard.
+- **Workflow Studio** — Visualize agent workflows, tool dependencies, and execution paths.
+- **Execution Inspector** — Explore detailed execution traces, MCP interactions, retries, errors, and agent behavior.
+- **MCP Reliability Gateway** — Observe and intercept tool interactions, introduce controlled failures, and support security policies.
+- **MCP Reliability Twin** — Reproduce execution conditions and replay interactions for debugging and controlled experimentation.
+- **Chaos Laboratory** — Run repeatable fault-injection experiments to evaluate agent resilience under different conditions.
+- **Reliability Intelligence** — Benchmark agent behavior, compare execution outcomes, and evaluate recovery strategies.
+- **Predictive Intelligence** — Apply machine learning to failure prediction, anomaly detection, and reliability analysis.
 
-| Layer | Technologies |
+Future development will explore automated vulnerability discovery, counterfactual execution analysis, and adaptive resilience mechanisms.
+
+Perturvia also aims to expose its own MCP server, allowing compatible AI assistants to retrieve reliability insights and initiate authorized testing workflows.
+
+## Technology
+
+Perturvia is being developed as a full-stack application with a modular architecture.
+
+| Area | Technologies |
 |---|---|
-| Frontend | TypeScript, React, Next.js, Tailwind CSS, shadcn/ui, React Flow, TanStack Query, Zustand, Recharts |
-| Backend | Python, FastAPI, Pydantic, SQLAlchemy, Alembic |
-| Data & Processing | PostgreSQL, Redis, Python background workers |
-| Agentic AI & MCP | LangGraph, LangChain, Official MCP SDK, OpenTelemetry |
-| Machine Learning | NumPy, Pandas, SciPy, scikit-learn, XGBoost, MLflow |
-| Testing | Pytest, HTTPX, Vitest, React Testing Library, Playwright |
-| DevOps | Git, GitHub Actions, Docker, Docker Compose, AWS, Vercel |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS |
+| Backend | Python, FastAPI |
+| Database | PostgreSQL |
+| AI & Agent Infrastructure | MCP, LangGraph, Qwen, OpenTelemetry |
+| Machine Learning & MLOps | scikit-learn, XGBoost, MLflow |
+| Development & Deployment | Docker, GitHub Actions, AWS |
 
-*Potential future extensions: Apache Kafka, Apache Spark, and graph-based machine learning.*
+Additional technologies will be introduced as the platform evolves. The architecture is intended to remain model-agnostic, with support for both open-weight and commercial LLMs.
 
-## Development Approach
+## Project Status
 
-Perturvia follows a modular monolith architecture with separate background processing. Development prioritizes complete frontend-to-backend features, reproducible experiments, automated testing, and CI/CD from the beginning.
+**Early Development — Phase 1: Architecture & System Design**
 
-The project is currently in the environment setup and repository initialization stage.
+The initial development environment, frontend and backend foundations, Docker configuration, and CI workflows are in place.
+
+Current development focuses on designing the core execution, experimentation, and MCP integration architecture before implementing the first end-to-end reliability testing workflows.
+
+The initial target is a **90-day MVP**, followed by incremental development toward a broader open-source platform.
+
+## Long-Term Vision
+
+AI agents are increasingly interacting with external tools, APIs, databases, and critical systems. As these systems become more autonomous, understanding their failure modes and ensuring reliable behavior becomes increasingly important.
+
+Perturvia aims to make agent reliability something developers can systematically observe, test, measure, and improve.
+
+The broader ambition is to create reusable infrastructure that supports reliable and secure agentic applications across industries, from software development and cybersecurity to healthcare and enterprise automation.
 
 ---
 
-**Goal:** Make AI agent reliability measurable, testable, and continuously improvable.
+**License:** Apache 2.0
