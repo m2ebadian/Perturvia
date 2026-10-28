@@ -13,7 +13,10 @@ export function AgentList({ agents }: AgentListProps) {
     <ul className="grid gap-4 md:grid-cols-2">
       {agents.map((agent) => (
         <li key={agent.id}>
-          <Link className="block transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring rounded-xl" href={`/agents/${agent.id}`}>
+          <Link
+            className="block transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            href={`/agents/${agent.id}`}
+          >
             <AgentCard agent={agent} />
           </Link>
         </li>

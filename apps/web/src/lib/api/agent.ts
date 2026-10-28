@@ -10,7 +10,6 @@ export async function getAgents(): Promise<Agent[]> {
   return agents;
 }
 
-
 export async function getAgent(agentId: string): Promise<Agent> {
   const response = await fetch(`http://api:8000/agents/${agentId}`);
   if (!response.ok) {

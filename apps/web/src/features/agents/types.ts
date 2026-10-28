@@ -1,6 +1,3 @@
-
-
-
 export interface Agent {
   id: string;
   name: string;
@@ -8,5 +5,3 @@ export interface Agent {
   created_at: string;
   updated_at: string;
 }
-
-

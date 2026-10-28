@@ -11,9 +11,8 @@ export default async function AgentsPage() {
           Welcome to the Agent Registry. Manage and view your registered AI agents.
         </p>
         <p className="text-muted-foreground">
-          {agents.length === 1
-            ? "There is 1 agent"
-            : `There are ${agents.length} agents`} registered.
+          {agents.length === 1 ? "There is 1 agent" : `There are ${agents.length} agents`}{" "}
+          registered.
         </p>
       </header>
       <AgentList agents={agents} />

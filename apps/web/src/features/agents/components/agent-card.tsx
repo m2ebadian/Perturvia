@@ -1,13 +1,11 @@
 import type { Agent } from "@/features/agents/types";
-import {Card, CardHeader, CardTitle, CardDescription} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface AgentCardProps {
   agent: Agent;
 }
 
-
 export function AgentCard({ agent }: AgentCardProps) {
-
   return (
     <Card>
       <CardHeader>
@@ -15,6 +13,5 @@ export function AgentCard({ agent }: AgentCardProps) {
         <CardDescription>{agent.description ?? "No description available"}</CardDescription>
       </CardHeader>
     </Card>
-  )
-
+  );
 }
