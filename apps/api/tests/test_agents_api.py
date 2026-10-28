@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import func, select
@@ -38,3 +38,46 @@ def test_create_agent_rejects_invalid_input(client, db_session_factory, payload)
     assert response.status_code == 422
     with db_session_factory() as db:
         assert db.scalar(select(func.count()).select_from(Agent)) == 0
+
+
+def test_list_agents_returns_empty_list_when_no_agents_exist(client):
+    response = client.get("/agents")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_agents_returns_newest_first(client):
+    first = client.post("/agents", json={"name": "Agent 1"})
+    second = client.post("/agents", json={"name": "Agent 2"})
+    assert first.status_code == 201
+    assert second.status_code == 201
+
+    response = client.get("/agents")
+
+    assert response.status_code == 200
+    returned_ids = [agent["id"] for agent in response.json()]
+    assert returned_ids == [second.json()["id"], first.json()["id"]]
+
+
+def test_get_agent_returns_agent(client):
+    created = client.post("/agents", json={"name": "Test Agent"})
+    assert created.status_code == 201
+
+    response = client.get(f"/agents/{created.json()['id']}")
+
+    assert response.status_code == 200
+    assert response.json() == created.json()
+
+
+def test_get_agent_returns_404_when_agent_does_not_exist(client):
+    response = client.get(f"/agents/{uuid4()}")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Agent not found"}
+
+
+def test_get_agent_returns_422_for_malformed_id(client):
+    response = client.get("/agents/not-a-uuid")
+
+    assert response.status_code == 422
