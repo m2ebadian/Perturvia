@@ -1,7 +1,8 @@
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import Depends, FastAPI
-from sqlalchemy import text
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
@@ -30,3 +31,20 @@ def create_agent(agent: AgentCreate, db: Annotated[Session, Depends(get_db)]):
     db.refresh(new_agent)
 
     return new_agent
+
+
+@app.get("/agents", response_model=list[AgentRead])
+def read_agents(db: Annotated[Session, Depends(get_db)]):
+    query = select(Agent).order_by(Agent.created_at.desc(), Agent.id.desc())
+    agents = db.scalars(query).all()
+    return agents
+
+
+@app.get("/agents/{agent_id}", response_model=AgentRead)
+def read_agent(agent_id: UUID, db: Annotated[Session, Depends(get_db)]):
+    agent = db.get(Agent, agent_id)
+
+    if agent is None:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    return agent
