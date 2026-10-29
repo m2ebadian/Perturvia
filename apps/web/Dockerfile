@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0"]
+CMD ["sh", "/app/docker-start.sh"]
