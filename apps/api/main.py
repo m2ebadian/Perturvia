@@ -3,11 +3,13 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
-from app.models.agent import Agent
+from app.models.agent import Agent, ToolTrace
 from app.schemas.agent import AgentCreate, AgentRead
+from app.schemas.tool_trace import ToolTraceCreate, ToolTraceRead
 
 app = FastAPI(title="Perturvia API")
 
@@ -48,3 +50,34 @@ def read_agent(agent_id: UUID, db: Annotated[Session, Depends(get_db)]):
         raise HTTPException(status_code=404, detail="Agent not found")
 
     return agent
+
+
+@app.post("/traces", response_model=ToolTraceRead, status_code=201)
+def create_trace(trace: ToolTraceCreate, db: Annotated[Session, Depends(get_db)]):
+    new_trace = ToolTrace(**trace.model_dump())
+    db.add(new_trace)
+
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        # Let PostgreSQL enforce the foreign key; a pre-insert lookup could race with a delete.
+        constraint = getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
+        if constraint == "fk_tool_traces_agent_id_agents":
+            raise HTTPException(status_code=422, detail="Agent not found") from exc
+        raise
+
+    db.refresh(new_trace)
+
+    return new_trace
+
+
+@app.get("/traces", response_model=list[ToolTraceRead])
+def read_traces(db: Annotated[Session, Depends(get_db)], run_id: UUID):
+    query = (
+        select(ToolTrace)
+        .where(ToolTrace.run_id == run_id)
+        .order_by(ToolTrace.started_at.asc(), ToolTrace.id.asc())
+    )
+    traces = db.scalars(query).all()
+    return traces
