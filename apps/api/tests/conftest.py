@@ -54,7 +54,7 @@ def db_engine() -> Iterator[Engine]:
 def db_session_factory(db_engine: Engine) -> sessionmaker[Session]:
     # Clean before each test so leftovers from an aborted run can't leak in.
     with db_engine.begin() as connection:
-        connection.execute(text("TRUNCATE agents"))
+        connection.execute(text("TRUNCATE tool_traces, agents"))
 
     return sessionmaker(bind=db_engine)
 
