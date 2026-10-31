@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAgents } from "@/lib/api/agent";
 import { AgentList } from "@/features/agents/components/agent-list";
 
@@ -9,6 +10,7 @@ export default async function AgentsPage() {
     <main className="max-w-4xl mx-auto px-4 py-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Agent Registry</h1>
+        <Link href="/agents/new">Register Agent</Link>
         <p className="text-muted-foreground">
           Welcome to the Agent Registry. Manage and view your registered AI agents.
         </p>

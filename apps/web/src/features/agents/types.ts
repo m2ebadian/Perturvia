@@ -5,3 +5,8 @@ export interface Agent {
   created_at: string;
   updated_at: string;
 }
+
+export interface CreateAgentRequest {
+  name: string;
+  description?: string;
+}
