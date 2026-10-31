@@ -1,0 +1,2 @@
+apps/web/** text=auto eol=lf
+apps/web/docker-start.sh text eol=lf
