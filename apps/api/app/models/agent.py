@@ -40,3 +40,4 @@ class ToolTrace(Base):
     duration_ms: Mapped[float] = mapped_column()
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    fault_injection: Mapped[dict | None] = mapped_column(JSONB, nullable=True)

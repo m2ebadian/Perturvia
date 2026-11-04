@@ -1,9 +1,11 @@
 import asyncio
 import logging
+import math
 import os
 import time
 import uuid
 from datetime import datetime, timezone
+import random
 
 import httpx2
 from mcp import Client, StdioServerParameters
@@ -19,6 +21,34 @@ def tool_error_message(call) -> str | None:
 
 
 async def trace_tool_call(client, http_client, tool_name: str, arguments: dict, run_id: uuid.UUID):
+    raw_latency = os.getenv("PERTURVIA_INJECT_LATENCY_MS", "0")
+    raw_failure = os.getenv("PERTURVIA_INJECT_FAILURE_RATE", "0")
+    try:
+        delay_ms = float(raw_latency)
+    except ValueError:
+        logger.warning("PERTURVIA_INJECT_LATENCY_MS is not a number: %r. Defaulting to 0.", raw_latency)
+        delay_ms = 0.0
+
+    if not math.isfinite(delay_ms) or delay_ms < 0:
+        logger.warning(
+            "PERTURVIA_INJECT_LATENCY_MS must be finite and non-negative: %r. Defaulting to 0.",
+            raw_latency,
+        )
+        delay_ms = 0.0
+
+    try:
+        failure_rate = float(raw_failure)
+    except ValueError:
+        logger.warning("PERTURVIA_INJECT_FAILURE_RATE is not a number: %r. Defaulting to 0.", raw_failure)
+        failure_rate = 0.0
+
+    if not (0.0 <= failure_rate <= 1.0):
+        logger.warning(
+            "PERTURVIA_INJECT_FAILURE_RATE must be between 0 and 1: %r. Defaulting to 0.",
+            raw_failure,
+        )
+        failure_rate = 0.0
+
     start = time.perf_counter()
     started_at = datetime.now(timezone.utc)
 
@@ -27,10 +57,30 @@ async def trace_tool_call(client, http_client, tool_name: str, arguments: dict, 
         "arguments": arguments,
         "run_id": run_id,
         "started_at": started_at,
+        "fault_injection": {
+            "latency_ms": delay_ms,
+            "failure_injected": False,
+        },
     }
 
+
+
     try:
+        if delay_ms > 0:
+            await asyncio.sleep(delay_ms / 1000)
+
+
+        inject_failure = random.random() < failure_rate
+
+
+
+
+        if inject_failure:
+            trace["fault_injection"]["failure_injected"] = True
+            raise RuntimeError("Perturvia injected tool-call failure")
+
         call = await client.call_tool(tool_name, arguments)
+
 
         trace.update(
             {
@@ -81,8 +131,13 @@ async def main():
 
     async with Client(params) as client:
         async with httpx2.AsyncClient(timeout=5.0) as http_client:
-            await trace_tool_call(client, http_client, "echo", {"message": "hello"}, run_id)
-            await trace_tool_call(client, http_client, "fail", {}, run_id)
+            for trial in range(1, 21):
+                try:
+                    await trace_tool_call(
+                        client, http_client, "echo", {"message": "hello"}, run_id
+                    )
+                except Exception as exc:
+                    logger.warning("Trial %d failed: %s", trial, exc)
 
 
 if __name__ == "__main__":

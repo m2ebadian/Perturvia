@@ -2,13 +2,14 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import false, func, not_, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
 from app.models.agent import Agent, ToolTrace
 from app.schemas.agent import AgentCreate, AgentRead
+from app.schemas.run_metrics import RunMetricsRead
 from app.schemas.tool_trace import ToolTraceCreate, ToolTraceRead
 
 app = FastAPI(title="Perturvia API")
@@ -81,3 +82,40 @@ def read_traces(db: Annotated[Session, Depends(get_db)], run_id: UUID):
     )
     traces = db.scalars(query).all()
     return traces
+
+
+@app.get("/runs/{run_id}/metrics", response_model=RunMetricsRead)
+def read_run_metrics(run_id: UUID, db: Annotated[Session, Depends(get_db)]):
+    # @> is NULL when fault_injection is NULL; coalesce so NOT(injected) still counts those rows.
+    injected = func.coalesce(
+        ToolTrace.fault_injection.contains({"failure_injected": True}), false()
+    )
+    query = select(
+        func.count().label("total_calls"),
+        func.count().filter(ToolTrace.status == "success").label("successful_calls"),
+        func.count().filter(ToolTrace.status == "tool_error").label("tool_errors"),
+        func.count().filter(ToolTrace.status == "client_exception").label("client_exceptions"),
+        func.count().filter(injected).label("injected_failures"),
+        func.count()
+        .filter(ToolTrace.status != "success", not_(injected))
+        .label("natural_failures"),
+    ).where(ToolTrace.run_id == run_id)
+    counts = db.execute(query).one()
+
+    if counts.total_calls == 0:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    non_injected_calls = counts.total_calls - counts.injected_failures
+
+    return RunMetricsRead(
+        run_id=run_id,
+        total_calls=counts.total_calls,
+        successful_calls=counts.successful_calls,
+        tool_errors=counts.tool_errors,
+        client_exceptions=counts.client_exceptions,
+        injected_failures=counts.injected_failures,
+        observed_failure_rate=(counts.total_calls - counts.successful_calls) / counts.total_calls,
+        natural_failure_rate=(
+            counts.natural_failures / non_injected_calls if non_injected_calls else None
+        ),
+    )
