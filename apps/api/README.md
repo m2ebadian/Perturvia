@@ -25,6 +25,7 @@ The API runs at `http://localhost:8000`. Interactive API documentation is availa
 - `GET /agents/{agent_id}` — Get an agent
 - `POST /traces` — Store an MCP tool execution trace
 - `GET /traces?run_id=<uuid>` — Retrieve traces for a run
+- `GET /runs/{run_id}/metrics` — Reliability metrics for a run
 
 ## Testing
 

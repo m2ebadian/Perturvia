@@ -127,3 +127,18 @@ def test_create_trace_rejects_missing_required_field(client, db_session_factory,
 
     assert response.status_code == 422
     assert count_traces(db_session_factory) == 0
+
+
+def test_fault_injection_metadata_round_trips(client):
+    fault_injection = {"latency_ms": 250, "failure_injected": False}
+    payload = make_trace_payload(fault_injection=fault_injection)
+
+    created = client.post("/traces", json=payload)
+
+    assert created.status_code == 201
+    assert created.json()["fault_injection"] == fault_injection
+
+    fetched = client.get("/traces", params={"run_id": payload["run_id"]})
+
+    assert fetched.status_code == 200
+    assert [trace["fault_injection"] for trace in fetched.json()] == [fault_injection]

@@ -19,6 +19,7 @@ class ToolTraceCreate(BaseModel):
     error_message: str | None = None
     duration_ms: Annotated[float, Field(ge=0)]
     started_at: AwareDatetime
+    fault_injection: dict | None = None
 
 
 class ToolTraceRead(BaseModel):
@@ -34,3 +35,4 @@ class ToolTraceRead(BaseModel):
     duration_ms: float
     started_at: datetime
     created_at: datetime
+    fault_injection: dict | None = None
