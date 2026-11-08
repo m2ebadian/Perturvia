@@ -1,35 +1,44 @@
-# MCP Test Server
+# Perturvia Repository Tools (MCP Server)
 
-A small Model Context Protocol (MCP) server used to test Perturvia's execution tracing.
+An MCP server that gives agents read-only access to a code repository. It is the tool layer for Perturvia's reference repository-analysis agents.
 
-It exposes two tools:
+## Tools
 
-- `echo` — Returns the provided message.
-- `fail` — Intentionally raises an error to test failure handling.
+| Tool | Purpose |
+|---|---|
+| `list_files(directory=".")` | Recursively list files, sorted, capped at 1,000 |
+| `read_file(path)` | Read a text file, capped at 100 KB |
+| `search_text(query, directory=".")` | Case-sensitive literal search, capped at 200 matches |
+
+All paths are relative to the workspace root and use forward slashes.
+
+## Workspace boundary
+
+The server only reads inside `PERTURVIA_WORKSPACE_ROOT` and refuses to start if it is unset or invalid.
+
+- Paths are resolved before checking, so `..` and symlinks cannot escape the root.
+- `.git`, `.venv`, `node_modules`, `__pycache__`, `.env*`, `*.pem`, and `*.key` are never listed, read, or searched.
+- Symlinks are skipped when walking the tree.
+- Binary files are rejected, and every result reports whether it was truncated.
 
 ## Running locally
 
-From this directory:
-
 ```bash
+export PERTURVIA_WORKSPACE_ROOT=/path/to/repo   # PowerShell: $env:PERTURVIA_WORKSPACE_ROOT = "A:\path\to\repo"
 uv sync
-uv run client.py
+npx @modelcontextprotocol/inspector uv run main.py
 ```
 
-The client calls both tools and sends execution traces to the Perturvia API at `http://localhost:8000`.
-
-Start the API first if you want traces saved to PostgreSQL. Set `PERTURVIA_API_URL` to use a different API address.
-
-## MCP Inspector
-
-To inspect and call the tools manually:
+## Development
 
 ```bash
-uv run mcp dev main.py
+uv run pytest -v
+uv run ruff check .
+uv run ruff format --check .
 ```
 
-## Tracing
+Symlink tests are skipped on Windows unless Developer Mode is enabled; CI runs them on Linux.
 
-Each tool call records its execution time, arguments, result, status, and error information.
+## Legacy tracing client
 
-Calls within the same client run share a `run_id`. If the API is unavailable, the client logs a warning without changing the tool's execution result.
+`client.py` is the original tracing prototype and still targets the removed `echo` tool. It will be replaced by Perturvia's MCP interceptor.
