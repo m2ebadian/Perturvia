@@ -2,10 +2,10 @@ import asyncio
 import logging
 import math
 import os
+import random
 import time
 import uuid
-from datetime import datetime, timezone
-import random
+from datetime import UTC, datetime
 
 import httpx2
 from mcp import Client, StdioServerParameters
@@ -26,7 +26,10 @@ async def trace_tool_call(client, http_client, tool_name: str, arguments: dict, 
     try:
         delay_ms = float(raw_latency)
     except ValueError:
-        logger.warning("PERTURVIA_INJECT_LATENCY_MS is not a number: %r. Defaulting to 0.", raw_latency)
+        logger.warning(
+            "PERTURVIA_INJECT_LATENCY_MS is not a number: %r. Defaulting to 0.",
+            raw_latency,
+        )
         delay_ms = 0.0
 
     if not math.isfinite(delay_ms) or delay_ms < 0:
@@ -39,7 +42,10 @@ async def trace_tool_call(client, http_client, tool_name: str, arguments: dict, 
     try:
         failure_rate = float(raw_failure)
     except ValueError:
-        logger.warning("PERTURVIA_INJECT_FAILURE_RATE is not a number: %r. Defaulting to 0.", raw_failure)
+        logger.warning(
+            "PERTURVIA_INJECT_FAILURE_RATE is not a number: %r. Defaulting to 0.",
+            raw_failure,
+        )
         failure_rate = 0.0
 
     if not (0.0 <= failure_rate <= 1.0):
@@ -50,7 +56,7 @@ async def trace_tool_call(client, http_client, tool_name: str, arguments: dict, 
         failure_rate = 0.0
 
     start = time.perf_counter()
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
 
     trace = {
         "tool_name": tool_name,
@@ -63,24 +69,17 @@ async def trace_tool_call(client, http_client, tool_name: str, arguments: dict, 
         },
     }
 
-
-
     try:
         if delay_ms > 0:
             await asyncio.sleep(delay_ms / 1000)
 
-
         inject_failure = random.random() < failure_rate
-
-
-
 
         if inject_failure:
             trace["fault_injection"]["failure_injected"] = True
             raise RuntimeError("Perturvia injected tool-call failure")
 
         call = await client.call_tool(tool_name, arguments)
-
 
         trace.update(
             {
@@ -133,9 +132,7 @@ async def main():
         async with httpx2.AsyncClient(timeout=5.0) as http_client:
             for trial in range(1, 21):
                 try:
-                    await trace_tool_call(
-                        client, http_client, "echo", {"message": "hello"}, run_id
-                    )
+                    await trace_tool_call(client, http_client, "echo", {"message": "hello"}, run_id)
                 except Exception as exc:
                     logger.warning("Trial %d failed: %s", trial, exc)
 

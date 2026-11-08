@@ -1,0 +1,41 @@
+name: MCP Server CI
+
+on:
+  pull_request:
+    branches: [dev]
+  push:
+    branches: [dev]
+
+jobs:
+  mcp-server:
+    name: MCP Server Checks
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/mcp-server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/mcp-server/uv.lock
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Check linting
+        run: uv run --locked ruff check .
+
+      - name: Check formatting
+        run: uv run --locked ruff format --check .
+
+      - name: Run tests
+        run: uv run --locked python -m pytest -v -rs
