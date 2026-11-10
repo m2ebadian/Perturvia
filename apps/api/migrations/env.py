@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.database.base import Base
 from app.models.agent import Agent  # noqa: F401
+from app.models.trace import Span, Trace  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
