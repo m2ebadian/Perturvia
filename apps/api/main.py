@@ -8,11 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
 from app.models.agent import Agent, ToolTrace
+from app.routers import traces
 from app.schemas.agent import AgentCreate, AgentRead
 from app.schemas.run_metrics import RunMetricsRead
 from app.schemas.tool_trace import ToolTraceCreate, ToolTraceRead
 
 app = FastAPI(title="Perturvia API")
+app.include_router(traces.router)
 
 
 @app.get("/health")
