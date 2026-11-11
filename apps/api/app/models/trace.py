@@ -14,7 +14,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 
@@ -43,6 +43,7 @@ class Trace(Base):
     outcome: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    spans: Mapped[list["Span"]] = relationship(order_by="Span.sequence")
 
 
 class Span(Base):
