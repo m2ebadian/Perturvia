@@ -38,6 +38,8 @@ def create_trace(trace: TraceCreate, db: Annotated[Session, Depends(get_db)]):
         constraint = _constraint_name(exc)
         if constraint == "fk_traces_agent_id_agents":
             raise HTTPException(status_code=422, detail="Agent not found") from exc
+        if constraint == "traces_pkey":
+            raise HTTPException(status_code=409, detail="Trace already exists") from exc
         raise
 
     db.refresh(new_trace)

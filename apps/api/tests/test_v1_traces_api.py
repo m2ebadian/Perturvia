@@ -51,6 +51,23 @@ class TestCreateTrace:
         assert response.status_code == 422
         assert response.json() == {"detail": "Agent not found"}
 
+    def test_uses_client_supplied_id(self, client):
+        trace_id = str(uuid4())
+
+        trace = create_trace(client, id=trace_id)
+
+        assert trace["id"] == trace_id
+        assert client.get(f"/v1/traces/{trace_id}").status_code == 200
+
+    def test_rejects_duplicate_id(self, client):
+        trace_id = str(uuid4())
+        create_trace(client, id=trace_id)
+
+        response = client.post("/v1/traces", json={"task": "analyze", "id": trace_id})
+
+        assert response.status_code == 409
+        assert response.json() == {"detail": "Trace already exists"}
+
     @pytest.mark.parametrize(
         "fields",
         [

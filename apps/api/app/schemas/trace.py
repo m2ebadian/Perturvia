@@ -9,6 +9,7 @@ SpanStatus = Literal["ok", "error"]
 
 
 class TraceCreate(BaseModel):
+    id: UUID | None = None
     agent_id: UUID | None = None
     task: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
     config: dict[str, Any] = Field(default_factory=dict)
