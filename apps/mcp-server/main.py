@@ -1,4 +1,8 @@
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 from mcp.server import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 import repo_tools
 
@@ -6,6 +10,21 @@ server = MCPServer("perturvia-repo-tools")
 
 
 WORKSPACE_ROOT = repo_tools.load_workspace_root()
+
+
+@contextmanager
+def _tool_errors() -> Iterator[None]:
+    """Report anticipated failures to the model; leave real crashes hidden.
+
+    Only exceptions whose messages repo_tools writes itself (containing just the
+    path the agent asked for) are translated. Others, like PermissionError, can
+    contain host paths, so MCP keeps them hidden as crashes.
+    WorkspaceAccessError is a ValueError subclass, so it is included.
+    """
+    try:
+        yield
+    except (ValueError, FileNotFoundError, NotADirectoryError) as exc:
+        raise ToolError(str(exc)) from exc
 
 
 @server.tool()
@@ -21,8 +40,8 @@ def list_files(directory: str = ".") -> dict:
     folders (.git, node_modules, .env files) are never listed. If `truncated`
     is true, the list was cut off at 1,000 files; narrow `directory` to see more.
     """
-
-    return repo_tools.list_files(root=WORKSPACE_ROOT, directory=directory)
+    with _tool_errors():
+        return repo_tools.list_files(root=WORKSPACE_ROOT, directory=directory)
 
 
 @server.tool()
@@ -39,7 +58,8 @@ def read_file(path: str) -> dict:
     not make claims about the rest. Binary files and sensitive files (.env,
     keys, .git) cannot be read.
     """
-    return repo_tools.read_file(root=WORKSPACE_ROOT, path=path)
+    with _tool_errors():
+        return repo_tools.read_file(root=WORKSPACE_ROOT, path=path)
 
 
 @server.tool()
@@ -57,7 +77,8 @@ def search_text(query: str, directory: str = ".") -> dict:
     searched. If `truncated` is true, results stopped at 200 matches; use a
     more specific query or directory.
     """
-    return repo_tools.search_text(root=WORKSPACE_ROOT, query=query, directory=directory)
+    with _tool_errors():
+        return repo_tools.search_text(root=WORKSPACE_ROOT, query=query, directory=directory)
 
 
 if __name__ == "__main__":

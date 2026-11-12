@@ -10,7 +10,7 @@ from uuid import UUID
 import httpx
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import INVALID_SPAN, Span, Tracer
+from opentelemetry.trace import INVALID_SPAN, Span, Status, StatusCode, Tracer
 
 from perturvia._config import resolve_api_url
 from perturvia._exporter import _KINDS, _PREFIX, PerturviaSpanExporter
@@ -151,6 +151,16 @@ def run(
                 f"/v1/traces/{current.trace_id}",
                 {"status": status, "ended_at": ended_at, "final_output": final_output},
             )
+
+
+def mark_error(span: Span, error_type: str, description: str | None = None) -> None:
+    """Mark a span as failed without raising, e.g. a tool error returned to the model.
+
+    Sets ERROR status and the error type (truncated to the API's limit). Safe to call
+    on the non-recording span that span() yields outside a run: it does nothing.
+    """
+    span.set_status(Status(StatusCode.ERROR, description))
+    span.set_attribute(f"{_PREFIX}error_type", error_type[:_MAX_ERROR_TYPE_LENGTH])
 
 
 @contextmanager

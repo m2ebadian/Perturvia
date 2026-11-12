@@ -124,6 +124,16 @@ class TestSpan:
         tool = next(s for s in spans if s["name"] == "read_file")
         assert tool["error_type"] == "E" * 50
 
+    def test_mark_error_records_failure_without_raising(self, fake_api):
+        with perturvia.run("analyze repo"):
+            with perturvia.span("read_file", kind="tool") as span:
+                perturvia.mark_error(span, "tool_error")
+
+        spans = [s for batch in fake_api.calls("POST", "/spans") for s in batch["spans"]]
+        tool = next(s for s in spans if s["name"] == "read_file")
+        assert tool["status"] == "error"
+        assert tool["error_type"] == "tool_error"
+
     @pytest.mark.parametrize(
         "kwargs",
         [
