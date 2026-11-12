@@ -1,0 +1,26 @@
+[project]
+name = "agent-runner"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.4.9",
+    "langchain-ollama>=1.1.0",
+    "langgraph>=1.2.19",
+    "mcp>=2.3.0",
+    "perturvia",
+]
+
+[tool.uv.sources]
+perturvia = { path = "../../packages/perturvia-sdk", editable = true }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.4",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
