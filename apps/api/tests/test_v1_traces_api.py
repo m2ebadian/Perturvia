@@ -73,7 +73,8 @@ class TestCreateTrace:
         [
             {"task": "   "},
             {"started_at": "2026-11-11T21:00:00"},
-            {"seed": 2**63},
+            {"seed": 2**53},
+            {"seed": -1},
             {"trial_number": 0},
         ],
     )

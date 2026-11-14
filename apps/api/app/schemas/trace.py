@@ -13,7 +13,7 @@ class TraceCreate(BaseModel):
     agent_id: UUID | None = None
     task: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
     config: dict[str, Any] = Field(default_factory=dict)
-    seed: Annotated[int, Field(ge=-(2**63), le=2**63 - 1)] | None = None
+    seed: Annotated[int, Field(ge=0, le=2**53 - 1)] | None = None
     experiment_id: UUID | None = None
     trial_number: Annotated[int, Field(ge=1)] | None = None
     started_at: AwareDatetime | None = None

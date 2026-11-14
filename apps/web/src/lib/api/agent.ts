@@ -1,8 +1,9 @@
 import type { Agent, CreateAgentRequest } from "@/features/agents/types";
 import { ApiError } from "@/lib/api/api-error";
+import { API_URL } from "@/lib/api/config";
 
 export async function getAgents(): Promise<Agent[]> {
-  const response = await fetch("http://api:8000/agents");
+  const response = await fetch(`${API_URL}/agents`);
   if (!response.ok) {
     throw new Error(`Failed to fetch agents: ${response.status}`);
   }
@@ -12,7 +13,7 @@ export async function getAgents(): Promise<Agent[]> {
 }
 
 export async function getAgent(agentId: string): Promise<Agent> {
-  const response = await fetch(`http://api:8000/agents/${agentId}`);
+  const response = await fetch(`${API_URL}/agents/${agentId}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch agent: ${response.status}`);
   }
@@ -22,7 +23,7 @@ export async function getAgent(agentId: string): Promise<Agent> {
 }
 
 export async function createAgent(data: CreateAgentRequest): Promise<Agent> {
-  const response = await fetch("http://api:8000/agents", {
+  const response = await fetch(`${API_URL}/agents`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
