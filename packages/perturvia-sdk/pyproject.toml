@@ -12,12 +12,18 @@ dependencies = [
     "opentelemetry-sdk>=1.45.2",
 ]
 
+[project.optional-dependencies]
+mcp = ["mcp>=2.3.0", "langchain-core>=1.7"]
+
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    # The mcp extra's packages, so the integration tests run after a plain `uv sync`.
+    "langchain-core>=1.7",
+    "mcp>=2.3.0",
     "pytest>=9.2.0",
     "ruff>=0.17.4",
 ]

@@ -22,6 +22,20 @@ with perturvia.run(task="Analyze this repository", seed=42) as run:
 - `span()` records one step. `kind` is `"agent"`, `"llm"`, or `"tool"`. Exceptions inside a span are recorded with their class name as the error type.
 - Pass an earlier span as `retry_of=` to link a retry to the call it repeats.
 
+## MCP tools and fault injection
+
+Install the extra with `pip install "perturvia[mcp]"`. Then `traced_tools` wraps every tool on an MCP server as a traced LangChain tool. It can also inject faults so you can test how the agent copes:
+
+```python
+from perturvia.faults import FaultPolicy
+from perturvia.integrations.mcp import traced_tools
+
+policy = FaultPolicy(error_rate=0.1, latency_rate=0.2, injection_rate=0.05)
+tools = await traced_tools(client, faults=policy, seed=42)
+```
+
+Each call gets at most one fault: `error`, `timeout`, `latency`, `malformed` (the result is cut in half), or `injection` (an instruction is appended to the result). The fault is recorded on the tool span. The same seed and the same sequence of calls give the same faults.
+
 ## Guarantees
 
 - **Perturvia never breaks your agent.** If the API is down, slow, or rejects data, the SDK logs a warning and your code keeps running.
