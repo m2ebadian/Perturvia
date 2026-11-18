@@ -39,6 +39,6 @@ uv run ruff format --check .
 
 Symlink tests are skipped on Windows unless Developer Mode is enabled; CI runs them on Linux.
 
-## Legacy tracing client
+## Tracing and fault injection
 
-`client.py` is the original tracing prototype and still targets the removed `echo` tool. It will be replaced by Perturvia's MCP interceptor.
+This server has no tracing or fault injection of its own. Agents trace its tools, and can inject faults into them, with the Perturvia SDK's `perturvia.integrations.mcp.traced_tools`. See `apps/agent-runner` for an example.

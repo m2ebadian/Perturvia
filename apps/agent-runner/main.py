@@ -1,15 +1,20 @@
 """Run the repo-analyst agent once against the repo-tools MCP server, traced by Perturvia."""
 
+import argparse
 import asyncio
+import dataclasses
 import os
+import random
 
 import perturvia
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.errors import GraphRecursionError
 from mcp import Client
+from perturvia.faults import FaultPolicy
+from perturvia.integrations.mcp import traced_tools
 
 from agent import MODEL_NAME, TEMPERATURE, build_agent
-from tools import load_tools, server_params
+from tools import server_params
 
 MAX_STEPS = int(os.getenv("PERTURVIA_MAX_STEPS", "40"))
 
@@ -32,19 +37,55 @@ You are a careful software engineer analyzing a code repository through tools.
 """
 
 
-async def main() -> None:
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    for fault in ("error", "timeout", "latency", "malformed", "injection"):
+        parser.add_argument(
+            f"--{fault}-rate",
+            type=float,
+            default=0.0,
+            metavar="P",
+            help=f"chance (0-1) that a tool call gets the {fault} fault",
+        )
+    parser.add_argument("--seed", type=int, help="seed for a reproducible fault schedule")
+    return parser.parse_args()
+
+
+def fault_policy(args: argparse.Namespace) -> FaultPolicy:
+    try:
+        return FaultPolicy(
+            error_rate=args.error_rate,
+            timeout_rate=args.timeout_rate,
+            latency_rate=args.latency_rate,
+            malformed_rate=args.malformed_rate,
+            injection_rate=args.injection_rate,
+        )
+    except ValueError as exc:
+        raise SystemExit(f"Invalid fault rates: {exc}") from exc
+
+
+async def main(args: argparse.Namespace) -> None:
+    policy = fault_policy(args)
+    # Always pick a seed, so any run can be reproduced from the seed its trace records.
+    seed = args.seed if args.seed is not None else random.randrange(2**53)
     perturvia.init()
 
     async with Client(server_params()) as client:
-        tools = await load_tools(client)
+        tools = await traced_tools(client, faults=policy, seed=seed)
         agent = build_agent(tools)
 
         try:
             with perturvia.run(
                 task=TASK,
-                config={"model": MODEL_NAME, "temperature": TEMPERATURE, "max_steps": MAX_STEPS},
+                config={
+                    "model": MODEL_NAME,
+                    "temperature": TEMPERATURE,
+                    "max_steps": MAX_STEPS,
+                    "faults": dataclasses.asdict(policy),
+                },
+                seed=seed,
             ) as run:
-                print(f"Trace: {run.trace_id}")
+                print(f"Trace: {run.trace_id}  Seed: {seed}")
                 with perturvia.span("repo-analyst", kind="agent", agent_name="repo-analyst"):
                     result = await agent.ainvoke(
                         {"messages": [SystemMessage(SYSTEM_PROMPT), HumanMessage(TASK)]},
@@ -59,4 +100,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(parse_args()))

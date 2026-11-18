@@ -15,7 +15,7 @@ dependencies = [
     { name = "langchain-ollama" },
     { name = "langgraph" },
     { name = "mcp" },
-    { name = "perturvia" },
+    { name = "perturvia", extra = ["mcp"] },
 ]
 
 [package.dev-dependencies]
@@ -29,7 +29,7 @@ requires-dist = [
     { name = "langchain-ollama", specifier = ">=1.1.0" },
     { name = "langgraph", specifier = ">=1.2.19" },
     { name = "mcp", specifier = ">=2.3.0" },
-    { name = "perturvia", editable = "../../packages/perturvia-sdk" },
+    { name = "perturvia", extras = ["mcp"], editable = "../../packages/perturvia-sdk" },
 ]
 
 [package.metadata.requires-dev]
@@ -854,14 +854,25 @@ dependencies = [
     { name = "opentelemetry-sdk" },
 ]
 
+[package.optional-dependencies]
+mcp = [
+    { name = "langchain-core" },
+    { name = "mcp" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "langchain-core", marker = "extra == 'mcp'", specifier = ">=1.7" },
+    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=2.3.0" },
     { name = "opentelemetry-sdk", specifier = ">=1.45.2" },
 ]
+provides-extras = ["mcp"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "langchain-core", specifier = ">=1.7" },
+    { name = "mcp", specifier = ">=2.3.0" },
     { name = "pytest", specifier = ">=9.2.0" },
     { name = "ruff", specifier = ">=0.17.4" },
 ]

@@ -44,7 +44,9 @@ def fake_api(monkeypatch) -> FakeApi:
     perturvia.init("http://perturvia.test")
     yield api
     _tracing._provider.shutdown()
-    monkeypatch.setattr(_tracing, "_warned_no_run", False)
+    # A plain assignment: monkeypatch.setattr here would be undone right after,
+    # restoring whatever value the test left behind.
+    _tracing._warned_no_run = False
 
 
 @pytest.fixture

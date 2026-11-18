@@ -38,6 +38,7 @@ export function SpanTimeline({ rows }: SpanTimelineProps) {
         const isError = span.status === "error";
         const color = isError ? ERROR_COLOR : kindColor[span.kind];
         const indent = `${depth * 1.25}rem`;
+        const faultType = getFaultType(span.fault);
 
         return (
           <details key={span.id} className="group">
@@ -50,15 +51,18 @@ export function SpanTimeline({ rows }: SpanTimelineProps) {
                 >
                   {span.name}
                 </span>
-                {isError ? (
-                  <span className="ml-auto shrink-0 text-xs font-medium text-red-600">
-                    {span.error_type ?? "error"}
-                  </span>
-                ) : (
-                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                    {span.kind}
-                  </span>
-                )}
+                <span className="ml-auto flex shrink-0 items-center gap-2 text-xs">
+                  {faultType !== null && (
+                    <span className="rounded-sm bg-orange-500/15 px-1 font-medium text-orange-700 dark:text-orange-400">
+                      injected: {faultType}
+                    </span>
+                  )}
+                  {isError ? (
+                    <span className="font-medium text-red-600">{span.error_type ?? "error"}</span>
+                  ) : (
+                    <span className="text-muted-foreground">{span.kind}</span>
+                  )}
+                </span>
                 <span className="w-14 shrink-0 text-right text-xs tabular-nums">
                   {formatDuration(span.duration_ms)}
                 </span>
@@ -127,6 +131,14 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       <dd className="min-w-0">{children}</dd>
     </>
   );
+}
+
+/** The injected fault's type, e.g. "latency", or null if the span had no fault. */
+function getFaultType(fault: Span["fault"]): string | null {
+  if (fault === null) {
+    return null;
+  }
+  return typeof fault.type === "string" ? fault.type : "unknown";
 }
 
 /** tool.arguments arrives as a JSON string; pretty-print it, or show it raw if it isn't JSON. */
