@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDuration, formatUtc, traceDurationMs } from "@/features/traces/format";
+import { taskSuccess } from "@/features/traces/outcome";
 import { statusVariant } from "@/features/traces/status";
 import { listTraces } from "@/lib/api/trace";
 
@@ -32,6 +33,7 @@ export default async function RunsPage() {
             <TableRow>
               <TableHead>Task</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Success</TableHead>
               <TableHead className="text-right">Duration</TableHead>
               <TableHead>Started</TableHead>
             </TableRow>
@@ -39,6 +41,7 @@ export default async function RunsPage() {
           <TableBody>
             {traces.map((trace) => {
               const durationMs = traceDurationMs(trace.started_at, trace.ended_at);
+              const success = taskSuccess(trace.outcome);
               return (
                 <TableRow key={trace.id}>
                   <TableCell className="max-w-md truncate">
@@ -49,6 +52,7 @@ export default async function RunsPage() {
                   <TableCell>
                     <Badge variant={statusVariant[trace.status]}>{trace.status}</Badge>
                   </TableCell>
+                  <TableCell>{success === null ? "—" : success ? "yes" : "no"}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {durationMs === null ? "—" : formatDuration(durationMs)}
                   </TableCell>

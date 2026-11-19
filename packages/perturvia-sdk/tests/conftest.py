@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass, field
+from typing import Any
 
 import httpx
 import pytest
@@ -14,14 +15,21 @@ from perturvia._processor import SequenceProcessor
 
 @dataclass
 class FakeApi:
-    """Records every request the SDK sends and answers with a fixed status."""
+    """Records every request the SDK sends and answers with a fixed status.
+
+    ``status_by_method`` overrides ``status_code`` per HTTP method, and every
+    response body is ``response_json``.
+    """
 
     status_code: int = 201
+    status_by_method: dict[str, int] = field(default_factory=dict)
+    response_json: Any = field(default_factory=dict)
     requests: list[httpx.Request] = field(default_factory=list)
 
     def handle(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
-        return httpx.Response(self.status_code, json={})
+        status = self.status_by_method.get(request.method, self.status_code)
+        return httpx.Response(status, json=self.response_json)
 
     def calls(self, method: str, path_suffix: str = "") -> list[dict]:
         return [

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { OutcomeSummary } from "@/features/traces/components/outcome-summary";
 import { SpanTimeline } from "@/features/traces/components/span-timeline";
 import { formatDuration, formatUtc, traceDurationMs } from "@/features/traces/format";
+import { parseOutcome } from "@/features/traces/outcome";
 import { statusVariant } from "@/features/traces/status";
 import { buildSpanTree, flattenTree } from "@/features/traces/tree";
 import { getTrace } from "@/lib/api/trace";
@@ -76,6 +78,13 @@ export default async function TracePage({ params }: PageProps<"/runs/[traceId]">
           </details>
         )}
       </header>
+
+      {trace.outcome !== null && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-lg font-semibold">Outcome</h2>
+          <OutcomeSummary outcome={parseOutcome(trace.outcome)} />
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Timeline</h2>

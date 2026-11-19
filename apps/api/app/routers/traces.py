@@ -15,6 +15,7 @@ from app.schemas.trace import (
     SpanBatchResult,
     TraceCreate,
     TraceDetail,
+    TraceOutcomeUpdate,
     TraceRead,
     TraceUpdate,
 )
@@ -80,6 +81,23 @@ def finish_trace(trace_id: UUID, update: TraceUpdate, db: Annotated[Session, Dep
     trace.status = update.status
     trace.final_output = update.final_output
     trace.ended_at = update.ended_at or datetime.now(UTC)
+
+    db.commit()
+    db.refresh(trace)
+
+    return trace
+
+
+@router.put("/{trace_id}/outcome", response_model=TraceRead)
+def set_trace_outcome(
+    trace_id: UUID, outcome: TraceOutcomeUpdate, db: Annotated[Session, Depends(get_db)]
+):
+    trace = db.get(Trace, trace_id)
+    if trace is None:
+        raise HTTPException(status_code=404, detail="Trace not found")
+
+    # Replaces the whole outcome, so re-evaluating a trace never leaves stale keys.
+    trace.outcome = outcome.root
 
     db.commit()
     db.refresh(trace)

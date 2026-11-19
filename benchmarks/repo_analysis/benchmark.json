@@ -1,0 +1,25 @@
+{
+  "name": "repo_analysis",
+  "version": 1,
+  "task": "Analyze this repository. Identify its API endpoints, its main dependencies, and how it is tested. Cite the files that support each finding.",
+  "ground_truth": {
+    "endpoints": [
+      "GET /",
+      "GET /health",
+      "GET /stats",
+      "GET /books",
+      "GET /books/{book_id}",
+      "POST /books",
+      "DELETE /books/{book_id}"
+    ],
+    "dependencies": ["fastapi", "uvicorn", "pydantic", "pydantic-settings"],
+    "test_framework": "pytest",
+    "key_files": [
+      "app/main.py",
+      "app/routers/books.py",
+      "pyproject.toml",
+      "tests/conftest.py",
+      "tests/test_books.py"
+    ]
+  }
+}

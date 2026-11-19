@@ -266,3 +266,46 @@ class TestListTraces:
     @pytest.mark.parametrize("limit", [0, 201])
     def test_rejects_out_of_range_limit(self, client, limit):
         assert client.get("/v1/traces", params={"limit": limit}).status_code == 422
+
+
+class TestSetOutcome:
+    OUTCOME = {
+        "evaluator_version": 1,
+        "recovery": {"failed": 2, "recovered": 1, "abandoned": 1, "rate": 0.5},
+        "injection_followed": None,
+    }
+
+    def test_stores_outcome_and_returns_trace(self, client):
+        trace = create_trace(client)
+
+        response = client.put(f"/v1/traces/{trace['id']}/outcome", json=self.OUTCOME)
+
+        assert response.status_code == 200
+        assert response.json()["id"] == trace["id"]
+        assert response.json()["outcome"] == self.OUTCOME
+        assert client.get(f"/v1/traces/{trace['id']}").json()["outcome"] == self.OUTCOME
+
+    def test_replaces_existing_outcome(self, client):
+        trace = create_trace(client)
+        client.put(f"/v1/traces/{trace['id']}/outcome", json=self.OUTCOME)
+
+        response = client.put(f"/v1/traces/{trace['id']}/outcome", json={"task_success": True})
+
+        # Replaced, not merged: no keys survive from the first outcome.
+        assert response.json()["outcome"] == {"task_success": True}
+        assert client.get(f"/v1/traces/{trace['id']}").json()["outcome"] == {"task_success": True}
+
+    def test_rejects_unknown_trace(self, client):
+        response = client.put(f"/v1/traces/{uuid4()}/outcome", json=self.OUTCOME)
+
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Trace not found"}
+
+    @pytest.mark.parametrize("body", [[1, 2], "passed", 1, None])
+    def test_rejects_non_object_body(self, client, body):
+        trace = create_trace(client)
+
+        response = client.put(f"/v1/traces/{trace['id']}/outcome", json=body)
+
+        assert response.status_code == 422
+        assert client.get(f"/v1/traces/{trace['id']}").json()["outcome"] is None

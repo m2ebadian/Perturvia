@@ -2,7 +2,15 @@ from datetime import datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    StringConstraints,
+    model_validator,
+)
 
 SpanKind = Literal["agent", "llm", "tool"]
 SpanStatus = Literal["ok", "error"]
@@ -23,6 +31,10 @@ class TraceUpdate(BaseModel):
     status: Literal["completed", "failed"]
     ended_at: AwareDatetime | None = None
     final_output: str | None = None
+
+
+class TraceOutcomeUpdate(RootModel[dict[str, Any]]):
+    """An evaluation result. Any JSON object; it replaces the stored outcome."""
 
 
 class TraceRead(BaseModel):

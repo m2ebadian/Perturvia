@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import dataclasses
+import json
 import os
 import random
 
@@ -10,18 +11,21 @@ import perturvia
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.errors import GraphRecursionError
 from mcp import Client
+from perturvia.benchmarks.repo_analysis import score
 from perturvia.faults import FaultPolicy
 from perturvia.integrations.mcp import traced_tools
 
 from agent import MODEL_NAME, TEMPERATURE, build_agent
-from tools import server_params
+from tools import REPO_ROOT, WORKSPACE_ROOT_ENV_VAR, server_params
 
 MAX_STEPS = int(os.getenv("PERTURVIA_MAX_STEPS", "40"))
 
-TASK = (
-    "Analyze this repository. Identify its API endpoints, its main dependencies, "
-    "and how it is tested. Cite the files that support each finding."
-)
+BENCHMARK_DIR = REPO_ROOT / "benchmarks" / "repo_analysis"
+BENCHMARK = json.loads((BENCHMARK_DIR / "benchmark.json").read_text(encoding="utf-8"))
+BENCHMARK_ID = f"{BENCHMARK['name']}@{BENCHMARK['version']}"
+TASK = BENCHMARK["task"]
+# Analyze the benchmark fixture unless PERTURVIA_WORKSPACE_ROOT points elsewhere.
+WORKSPACE_ROOT = os.getenv(WORKSPACE_ROOT_ENV_VAR) or BENCHMARK_DIR / "fixture"
 
 SYSTEM_PROMPT = """\
 You are a careful software engineer analyzing a code repository through tools.
@@ -70,7 +74,7 @@ async def main(args: argparse.Namespace) -> None:
     seed = args.seed if args.seed is not None else random.randrange(2**53)
     perturvia.init()
 
-    async with Client(server_params()) as client:
+    async with Client(server_params(WORKSPACE_ROOT)) as client:
         tools = await traced_tools(client, faults=policy, seed=seed)
         agent = build_agent(tools)
 
@@ -78,6 +82,7 @@ async def main(args: argparse.Namespace) -> None:
             with perturvia.run(
                 task=TASK,
                 config={
+                    "benchmark": BENCHMARK_ID,
                     "model": MODEL_NAME,
                     "temperature": TEMPERATURE,
                     "max_steps": MAX_STEPS,
@@ -94,9 +99,32 @@ async def main(args: argparse.Namespace) -> None:
                 run.final_output = result["messages"][-1].content
         except GraphRecursionError:
             print(f"\nRun failed: the agent exceeded {MAX_STEPS} steps without finishing.")
-            return
+        else:
+            print("\n" + run.final_output)
 
-    print("\n" + run.final_output)
+    # run() flushed every span and finished the trace on exit, so the stored trace is
+    # complete. Failed runs are evaluated too: their tool errors and recovery still count.
+    outcome = perturvia.evaluate(
+        run.trace_id,
+        checks=[lambda t: {"benchmark": BENCHMARK_ID, **score(t, BENCHMARK["ground_truth"])}],
+    )
+    print_outcome(outcome)
+
+
+def _percent(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.0%}"
+
+
+def print_outcome(outcome: dict | None) -> None:
+    if outcome is None:
+        print("\nEvaluation failed; see the warning above.")
+        return
+    print(
+        f"\nTask success: {outcome['task_success']}"
+        f"  Silent failure: {outcome['silent_failure']}"
+        f"  Endpoint recall: {_percent(outcome['endpoints']['recall'])}"
+        f"  Recovery rate: {_percent(outcome['recovery']['rate'])}"
+    )
 
 
 if __name__ == "__main__":
